@@ -1,4 +1,13 @@
 <resources>
     <string name="app_name">No Stress Wish List</string>
     <string name="action_settings">Settings</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="available_online">Available Online</string>
+    <string name="allow_multiples">Allow Multiples</string>
+    <string name="priority_gift">Priority Gift</string>
+    <string name="additional_comments">Additional comments</string>
+    <string name="name">Name</string>
+    <string name="price_can_leave_blank">Price (can leave blank)</string>
 </resources>
