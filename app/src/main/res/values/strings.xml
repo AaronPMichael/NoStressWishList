@@ -10,4 +10,5 @@
     <string name="additional_comments">Additional comments</string>
     <string name="name">Name</string>
     <string name="price_can_leave_blank">Price (can leave blank)</string>
+    <string name="add_item">Add Item</string>
 </resources>

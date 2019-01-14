@@ -12,8 +12,8 @@ class YourItemAdapter(var context: Context):RecyclerView.Adapter<YourItemHolder>
 
 
 
-    override fun onCreateViewHolder(p0: ViewGroup, p1: Int): YourItemHolder {
-        val view= LayoutInflater.from(context).inflate(R.layout.card_layout,parent,false)
+    override fun onCreateViewHolder(parent: ViewGroup, p1: Int): YourItemHolder {
+        val view= LayoutInflater.from(context).inflate(R.layout.item_card_view,parent,false)
         return YourItemHolder(view,this)
     }
 

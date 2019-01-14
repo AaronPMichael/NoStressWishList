@@ -7,6 +7,8 @@ import android.view.Menu
 import android.view.MenuItem
 
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.content_main.*
+import kotlinx.android.synthetic.main.fragment_your_items.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -14,6 +16,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
+        new_item_button.setOnClickListener {addItem()}
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -30,5 +33,10 @@ class MainActivity : AppCompatActivity() {
             R.id.action_settings -> true
             else -> super.onOptionsItemSelected(item)
         }
+    }
+    private fun addItem(){
+        var ft = supportFragmentManager.beginTransaction()
+        ft.replace(R.id.fragment_container,Item_Add_Fragment(),"add item")
+        ft.commit()
     }
 }
