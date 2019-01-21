@@ -7,59 +7,88 @@
 
     <!-- TODO: Update blank fragment layout -->
 
-    <EditText
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:inputType="textPersonName"
-            android:textSize="28dp"
-            android:ems="10"
-            android:id="@+id/editName" android:layout_marginTop="64dp"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent" android:layout_marginLeft="32dp"
-            android:layout_marginStart="32dp" android:hint="@string/name"/>
-    <EditText
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:inputType="number"
-            android:ems="10"
-            android:id="@+id/editPrice"
-            android:textSize="28dp"
-            android:layout_marginStart="32dp"
-            app:layout_constraintStart_toStartOf="parent" android:layout_marginLeft="32dp"
-            android:layout_marginTop="16dp"
-            app:layout_constraintTop_toBottomOf="@+id/editName" android:hint="@string/price_can_leave_blank"/>
-    <CheckBox
-            android:text="@string/priority_gift"
-            android:textSize="24dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/priority_box" app:layout_constraintStart_toStartOf="parent" android:layout_marginLeft="32dp"
-            android:layout_marginStart="32dp" android:layout_marginTop="16dp"
-            app:layout_constraintTop_toBottomOf="@+id/editPrice" android:checked="false"/>
-    <CheckBox
-            android:text="@string/allow_multiples"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="24dp"
-            android:id="@+id/mult_box" app:layout_constraintStart_toStartOf="parent" android:layout_marginLeft="32dp"
-            android:layout_marginStart="32dp" android:layout_marginTop="8dp"
-            app:layout_constraintTop_toBottomOf="@+id/priority_box"/>
-    <CheckBox
-            android:text="@string/available_online"
-            android:layout_width="229dp"
-            android:layout_height="41dp"
-            android:id="@+id/online_box" android:layout_marginTop="8dp"
-            android:textSize="24dp"
-            app:layout_constraintTop_toBottomOf="@+id/mult_box" app:layout_constraintStart_toStartOf="parent"
-            android:layout_marginLeft="32dp" android:layout_marginStart="32dp"/>
-    <EditText
-            android:layout_width="339dp"
-            android:layout_height="139dp"
-            android:inputType="textMultiLine"
-            android:gravity="top"
-            android:ems="10"
-            android:id="@+id/comments_field" android:layout_marginTop="16dp"
-            app:layout_constraintTop_toBottomOf="@+id/online_box" android:layout_marginStart="32dp"
-            app:layout_constraintStart_toStartOf="parent" android:layout_marginLeft="32dp"
-            android:hint="@string/additional_comments"/>
+    <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp">
+        <android.support.constraint.ConstraintLayout android:layout_width="match_parent"
+                                                     android:layout_height="wrap_content">
+            <EditText
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:inputType="textPersonName"
+                    android:textSize="28dp"
+                    android:ems="10"
+                    android:id="@+id/editName" android:layout_marginTop="32dp"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintStart_toStartOf="parent" android:layout_marginLeft="32dp"
+                    android:layout_marginStart="32dp" android:hint="@string/name"/>
+            <EditText
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:inputType="numberDecimal"
+                    android:ems="10"
+                    android:id="@+id/editPrice"
+                    android:textSize="28dp"
+                    android:layout_marginStart="32dp"
+                    app:layout_constraintStart_toStartOf="parent" android:layout_marginLeft="32dp"
+                    android:layout_marginTop="24dp"
+                    app:layout_constraintTop_toBottomOf="@+id/editName" android:hint="@string/price_can_leave_blank"/>
+            <CheckBox
+                    android:text="@string/priority_gift"
+                    android:textSize="24dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/priority_box" app:layout_constraintStart_toStartOf="parent"
+                    android:layout_marginLeft="32dp"
+                    android:layout_marginStart="32dp" android:layout_marginTop="20dp"
+                    app:layout_constraintTop_toBottomOf="@+id/editPrice" android:checked="false"/>
+            <CheckBox
+                    android:text="@string/allow_multiples"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="24dp"
+                    android:id="@+id/mult_box" app:layout_constraintStart_toStartOf="parent"
+                    android:layout_marginLeft="32dp"
+                    android:layout_marginStart="32dp" android:layout_marginTop="8dp"
+                    app:layout_constraintTop_toBottomOf="@+id/priority_box"/>
+            <CheckBox
+                    android:text="@string/available_online"
+                    android:layout_width="229dp"
+                    android:layout_height="41dp"
+                    android:id="@+id/online_box" android:layout_marginTop="8dp"
+                    android:textSize="24dp"
+                    app:layout_constraintTop_toBottomOf="@+id/mult_box" app:layout_constraintStart_toStartOf="parent"
+                    android:layout_marginLeft="32dp" android:layout_marginStart="32dp"/>
+            <EditText
+                    android:layout_width="339dp"
+                    android:layout_height="wrap_content"
+                    android:inputType="textMultiLine"
+                    android:gravity="top"
+                    android:ems="10"
+                    android:id="@+id/comments_field"
+                    android:layout_marginStart="32dp"
+                    app:layout_constraintStart_toStartOf="parent" android:layout_marginLeft="32dp"
+                    android:hint="@string/additional_comments"
+                    android:layout_marginTop="20dp"
+                    app:layout_constraintTop_toBottomOf="@+id/online_box"/>
+            <Button
+                    android:text="@string/cancel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/negative_button" app:layout_constraintStart_toStartOf="parent"
+                    android:layout_marginLeft="60dp"
+                    android:layout_marginStart="60dp" android:layout_marginBottom="8dp"
+                    app:layout_constraintBottom_toBottomOf="parent" android:layout_marginTop="24dp"
+                    app:layout_constraintTop_toBottomOf="@+id/comments_field"/>
+            <Button
+                    android:text="@string/save"
+                    android:layout_width="88dp"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/positive_button" app:layout_constraintEnd_toEndOf="parent"
+                    android:layout_marginEnd="60dp"
+                    android:layout_marginRight="60dp"
+                    android:layout_marginBottom="8dp" app:layout_constraintBottom_toBottomOf="parent"
+                    android:layout_marginTop="24dp" app:layout_constraintTop_toBottomOf="@+id/comments_field"/>
+        </android.support.constraint.ConstraintLayout>
+    </ScrollView>
 </android.support.constraint.ConstraintLayout>

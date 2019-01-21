@@ -1,14 +1,12 @@
 package rose.michaeap.nostresswishlist
 
 import android.content.Context
-import android.net.Uri
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-
-
+import kotlinx.android.synthetic.main.fragment_item__add_.view.*
 
 
 /**
@@ -21,7 +19,7 @@ import android.view.ViewGroup
  *
  */
 class Item_Add_Fragment : Fragment() {
-    private var listener: OnFragmentInteractionListener? = null
+    lateinit var itemSource:ItemSource
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,61 +33,64 @@ class Item_Add_Fragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_item__add_, container, false)
+        var ogi = arguments?.getParcelable<Item>(ARG_ITEM)?:null
+        var view = inflater.inflate(R.layout.fragment_item__add_, container, false)
+        if (ogi!=null){
+            view.editName.setText(ogi.name)
+            if (ogi.price!=0.0)
+                view.editPrice.setText(ogi.price.toString())
+            view.mult_box.isChecked = ogi.mult
+            view.priority_box.isChecked = ogi.priority
+            view.online_box.isChecked = ogi.online
+            view.comments_field.setText(ogi.comments)
+        }
+        view.positive_button.setOnClickListener {
+            val item = createItem(view)
+            if (ogi!=null)
+                item.id = ogi.id
+            itemSource.closeInspect(item,ogi)
+        }
+        view.negative_button.setOnClickListener {
+            itemSource.closeInspect(null,null)
+        }
+        return view
     }
 
-    // TODO: Rename method, update argument and hook method into UI event
-    fun onButtonPressed(uri: Uri) {
-        listener?.onFragmentInteraction(uri)
-    }
 
     override fun onAttach(context: Context) {
-        super.onAttach(context)
-        if (context is OnFragmentInteractionListener) {
-            listener = context
-        } else {
-            throw RuntimeException(context.toString() + " must implement OnFragmentInteractionListener")
+        if (context is ItemSource) {
+            itemSource = context as ItemSource
         }
+        super.onAttach(context)
+
     }
 
-    override fun onDetach() {
-        super.onDetach()
-        listener = null
-    }
-
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     *
-     *
-     * See the Android Training lesson [Communicating with Other Fragments]
-     * (http://developer.android.com/training/basics/fragments/communicating.html)
-     * for more information.
-     */
-    interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
-        fun onFragmentInteraction(uri: Uri)
+    fun createItem(view:View):Item{
+        val name = view.editName.text.toString()
+        var price = view.editPrice.text.toString().toDoubleOrNull()
+        if (price==null)
+            price = 0.0
+        val priority = view.priority_box.isChecked
+        val mult = view.mult_box.isChecked
+        val online = view.online_box.isChecked
+        val comment = view.comments_field.text.toString()
+        return Item(name,price,priority,mult,online,comment,"")
     }
 
     companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment Item_Add_Fragment.
-         */
-        // TODO: Rename and change types and number of parameters
+
+        val ARG_ITEM = "item"
+
         @JvmStatic
-        fun newInstance() =
+        fun newInstance(item:Item) =
             Item_Add_Fragment().apply {
                 arguments = Bundle().apply {
-
-
+                    if (item!=null)
+                        putParcelable(ARG_ITEM,item)
                 }
             }
     }
+
+
+
 }

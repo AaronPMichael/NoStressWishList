@@ -11,4 +11,7 @@
     <string name="name">Name</string>
     <string name="price_can_leave_blank">Price (can leave blank)</string>
     <string name="add_item">Add Item</string>
+    <string name="save">save</string>
+    <string name="cancel">cancel</string>
+    <string name="remove_item">Remove item?</string>
 </resources>

@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "426623188198",
+    "firebase_url": "https://nswl-8c846.firebaseio.com",
+    "project_id": "nswl-8c846",
+    "storage_bucket": "nswl-8c846.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:426623188198:android:69267332addc3575",
+        "android_client_info": {
+          "package_name": "rose.michaeap.nostresswishlist"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "426623188198-6cjpc0454a5uu61id39t06vl640dfut4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBv4gbqCWltaENQcABl8-Cb7vMj3mI-Rpg"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

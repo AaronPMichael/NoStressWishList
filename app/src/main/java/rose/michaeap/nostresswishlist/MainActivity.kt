@@ -1,23 +1,38 @@
 package rose.michaeap.nostresswishlist
 
+
 import android.os.Bundle
-import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
+import com.google.firebase.firestore.DocumentChange
 
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.QuerySnapshot
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.content_main.*
-import kotlinx.android.synthetic.main.fragment_your_items.*
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(),ItemSource {
+
+    var items = ArrayList<Item>()
+    val itemsRef = FirebaseFirestore.getInstance().collection("items")
+    var itemDep : ItemAdapter?=null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
-        new_item_button.setOnClickListener {addItem()}
+        addListener()
+        showItemList()
     }
+
+    fun showItemList(){
+        var ft = supportFragmentManager.beginTransaction()
+        ft.replace(R.id.fragment_container,YourItemFragment())
+        ft.commit()
+    }
+
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -34,9 +49,118 @@ class MainActivity : AppCompatActivity() {
             else -> super.onOptionsItemSelected(item)
         }
     }
-    private fun addItem(){
+    fun inputItem(){
+        itemDep = null
         var ft = supportFragmentManager.beginTransaction()
         ft.replace(R.id.fragment_container,Item_Add_Fragment(),"add item")
         ft.commit()
     }
+    override fun getItemList():ArrayList<Item>{
+        return items
+    }
+
+    override fun getItemListener(): View.OnClickListener {
+        return View.OnClickListener {  }
+    }
+    override fun closeInspect(item:Item?,ogi:Item?){
+        if (item!=null){
+            if (ogi==null) {
+                itemsRef.add(item)
+//                items.add(item)
+//                itemsRef.whereEqualTo("name",item.name).get().addOnSuccessListener {snapshot: QuerySnapshot? ->
+//                    item.id = snapshot!!.documents[0].id
+//                }
+            }
+            else{
+                itemsRef.document(ogi.id).set(item)
+            }
+        }
+        showItemList()
+    }
+
+    override fun selectItem(item:Item){
+        var c = getIndex(item)
+        var ft = supportFragmentManager.beginTransaction()
+        ft.replace(R.id.fragment_container,Item_Add_Fragment.newInstance(item),"add item")
+        ft.commit()
+    }
+    fun getIndex(item:Item):Int{
+        for ((p,i) in items.withIndex())
+            if (i==item)
+                return p
+        return -1
+    }
+
+    override fun removeItem(item: Item):Int {
+        val n = getIndex(item)
+        if (n<0)
+            return -1
+        items.removeAt(n)
+        itemsRef.document(item.id).delete()
+        return n
+    }
+
+    fun addListener(){
+        itemsRef.addSnapshotListener { snapshot, firebaseFirestoreException ->
+            if (firebaseFirestoreException!=null){
+                Log.e("MyTag",firebaseFirestoreException.message)
+                return@addSnapshotListener
+            }
+            for (documentChange in snapshot!!.documentChanges){
+                processChange(documentChange)
+            }
+        }
+    }
+    fun processChange(change: DocumentChange){
+        var item = change.document.toObject(Item::class.java)
+        item.id = change.document.id
+        if (change.type == DocumentChange.Type.ADDED){
+            items.add(item)
+            if (itemDep!=null)
+                (itemDep as ItemAdapter).notifyAdded()
+        }
+        if (change.type == DocumentChange.Type.MODIFIED){
+            for ((n,it) in items.withIndex()){
+                if (it.id==item.id){
+                    items[n]=item
+                    if (itemDep!=null)
+                        (itemDep as ItemAdapter).itemChanged(n)
+                    break
+                }
+            }
+        }
+        if (change.type == DocumentChange.Type.REMOVED){
+            for ((n,it) in items.withIndex()){
+                if (it.id == item.id){
+                    items.removeAt(n)
+                    if (itemDep!=null)
+                        (itemDep as ItemAdapter).itemRemoved(n)
+                    break
+                }
+            }
+        }
+    }
+
+    override fun registerItemAdapter(adp: ItemAdapter) {
+        itemDep = adp
+    }
+
 }
+
+
+
+
+    interface ItemSource{
+        fun getItemList():ArrayList<Item>
+        fun getItemListener():View.OnClickListener
+        fun closeInspect(item:Item?,ogi:Item?)
+        fun selectItem(item:Item)
+        fun removeItem(item:Item):Int
+        fun registerItemAdapter(adp:ItemAdapter)
+    }
+
+
+
+
+
+
