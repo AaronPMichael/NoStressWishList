@@ -5,7 +5,7 @@ import android.os.Parcelable
 import com.google.firebase.firestore.Exclude
 import java.io.Serializable
 
-data class Item(var name:String="",var price:Double=0.0,var priority:Boolean=false,var mult:Boolean=false,var online:Boolean=false,var comments:String="",var id:String=""):Parcelable,Serializable {
+data class Item(var name:String="",var price:Double=0.0,var priority:Boolean=false,var mult:Boolean=false,var online:Boolean=false,var comments:String="",var id:String="",var userID:String=""):Parcelable,Serializable {
 
     constructor(parcel: Parcel) : this(
         parcel.readString(),
@@ -13,7 +13,7 @@ data class Item(var name:String="",var price:Double=0.0,var priority:Boolean=fal
         parcel.readByte() != 0.toByte(),
         parcel.readByte() != 0.toByte(),
         parcel.readByte() != 0.toByte(),
-        parcel.readString(),parcel.readString()
+        parcel.readString(),parcel.readString(),parcel.readString()
     ) {
     }
 
@@ -25,6 +25,7 @@ data class Item(var name:String="",var price:Double=0.0,var priority:Boolean=fal
         parcel.writeByte(if (online) 1 else 0)
         parcel.writeString(comments)
         parcel.writeString(id)
+        parcel.writeString(userID)
     }
 
     override fun describeContents(): Int {

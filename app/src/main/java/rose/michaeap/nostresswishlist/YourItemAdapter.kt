@@ -17,8 +17,6 @@ class YourItemAdapter(var context: Context?):RecyclerView.Adapter<YourItemHolder
     val itemsRef = FirebaseFirestore.getInstance().collection("items")
 
     override fun onCreateViewHolder(parent: ViewGroup, p1: Int): YourItemHolder {
-        items = source.getItemList()
-        source.registerItemAdapter(this)
         val view = LayoutInflater.from(context).inflate(R.layout.item_card_view, parent, false)
         return YourItemHolder(view, this)
     }
@@ -33,7 +31,9 @@ class YourItemAdapter(var context: Context?):RecyclerView.Adapter<YourItemHolder
 
     fun loadItems() {
         source = context as ItemSource
+        source.registerItemAdapter(this)
         items = source.getItemList()
+        Log.i("MyTag",items.size.toString())
         notifyItemRangeInserted(0, items.size)
     }
 

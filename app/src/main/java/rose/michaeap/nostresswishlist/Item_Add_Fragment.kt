@@ -74,7 +74,7 @@ class Item_Add_Fragment : Fragment() {
         val mult = view.mult_box.isChecked
         val online = view.online_box.isChecked
         val comment = view.comments_field.text.toString()
-        return Item(name,price,priority,mult,online,comment,"")
+        return Item(name,price,priority,mult,online,comment)
     }
 
     companion object {

@@ -7,6 +7,8 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import com.firebase.ui.auth.AuthUI
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentChange
 
 import com.google.firebase.firestore.FirebaseFirestore
@@ -15,9 +17,12 @@ import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity(),ItemSource {
 
+    val RC_SIGN_IN = 1
     var items = ArrayList<Item>()
     val itemsRef = FirebaseFirestore.getInstance().collection("items")
     var itemDep : ItemAdapter?=null
+    lateinit var authListener : FirebaseAuth.AuthStateListener
+    var auth = FirebaseAuth.getInstance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,6 +30,7 @@ class MainActivity : AppCompatActivity(),ItemSource {
         setSupportActionBar(toolbar)
         addListener()
         showItemList()
+        addAuthListener()
     }
 
     fun showItemList(){
@@ -65,6 +71,7 @@ class MainActivity : AppCompatActivity(),ItemSource {
     override fun closeInspect(item:Item?,ogi:Item?){
         if (item!=null){
             if (ogi==null) {
+                item.userID = auth.uid?:""
                 itemsRef.add(item)
 //                items.add(item)
 //                itemsRef.whereEqualTo("name",item.name).get().addOnSuccessListener {snapshot: QuerySnapshot? ->
@@ -102,11 +109,11 @@ class MainActivity : AppCompatActivity(),ItemSource {
 
     fun addListener(){
         itemsRef.addSnapshotListener { snapshot, firebaseFirestoreException ->
-            if (firebaseFirestoreException!=null){
-                Log.e("MyTag",firebaseFirestoreException.message)
+            if (firebaseFirestoreException != null) {
+                Log.e("MyTag", firebaseFirestoreException.message)
                 return@addSnapshotListener
             }
-            for (documentChange in snapshot!!.documentChanges){
+            for (documentChange in snapshot!!.documentChanges) {
                 processChange(documentChange)
             }
         }
@@ -116,6 +123,7 @@ class MainActivity : AppCompatActivity(),ItemSource {
         item.id = change.document.id
         if (change.type == DocumentChange.Type.ADDED){
             items.add(item)
+            Log.i("MyTag","*"+(itemDep!=null))
             if (itemDep!=null)
                 (itemDep as ItemAdapter).notifyAdded()
         }
@@ -144,6 +152,22 @@ class MainActivity : AppCompatActivity(),ItemSource {
     override fun registerItemAdapter(adp: ItemAdapter) {
         itemDep = adp
     }
+    fun addAuthListener(){
+        authListener = FirebaseAuth.AuthStateListener {}
+        var user = auth.currentUser
+        if (user==null){
+            startLogin()
+        }
+
+
+    }
+    fun startLogin(){
+        val providers = arrayListOf(AuthUI.IdpConfig.GoogleBuilder().build())
+        val loginIntent = AuthUI.getInstance().createSignInIntentBuilder().setAvailableProviders(providers).build()
+        startActivityForResult(
+            loginIntent,
+            RC_SIGN_IN)
+    }
 
 }
 
@@ -158,6 +182,7 @@ class MainActivity : AppCompatActivity(),ItemSource {
         fun removeItem(item:Item):Int
         fun registerItemAdapter(adp:ItemAdapter)
     }
+
 
 
 
