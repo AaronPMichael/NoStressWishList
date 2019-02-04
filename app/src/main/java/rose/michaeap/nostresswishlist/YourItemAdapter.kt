@@ -7,25 +7,24 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import com.google.firebase.firestore.DocumentChange
-import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 
-class YourItemAdapter(var context: Context?):RecyclerView.Adapter<YourItemHolder>(),ItemAdapter {
+class YourItemAdapter(var context: Context?,var name:String):RecyclerView.Adapter<ItemHolder>(),ItemAdapter {
 
-    lateinit var items: ArrayList<Item>
+    var items = ArrayList<Item>()
     lateinit var source: ItemSource
     val itemsRef = FirebaseFirestore.getInstance().collection("items")
 
-    override fun onCreateViewHolder(parent: ViewGroup, p1: Int): YourItemHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, p1: Int): ItemHolder {
         val view = LayoutInflater.from(context).inflate(R.layout.item_card_view, parent, false)
-        return YourItemHolder(view, this)
+        return ItemHolder(view, this)
     }
 
     override fun getItemCount(): Int {
         return items.size
     }
 
-    override fun onBindViewHolder(p0: YourItemHolder, p1: Int) {
+    override fun onBindViewHolder(p0: ItemHolder, p1: Int) {
         p0.bind(items[p1])
     }
 
@@ -33,7 +32,6 @@ class YourItemAdapter(var context: Context?):RecyclerView.Adapter<YourItemHolder
         source = context as ItemSource
         source.registerItemAdapter(this)
         items = source.getItemList()
-        Log.i("MyTag",items.size.toString())
         notifyItemRangeInserted(0, items.size)
     }
 
@@ -65,6 +63,49 @@ class YourItemAdapter(var context: Context?):RecyclerView.Adapter<YourItemHolder
 
     override fun itemRemoved(n: Int) {
         notifyItemRemoved(n)
+    }
+
+    fun addListener(){
+        if (!items.isEmpty())
+            notifyItemRangeRemoved(0,items.size-1)
+        items = ArrayList<Item>()
+        itemsRef.addSnapshotListener { snapshot, firebaseFirestoreException ->
+            if (firebaseFirestoreException != null) {
+                Log.e("MyTag", firebaseFirestoreException.message)
+                return@addSnapshotListener
+            }
+            for (documentChange in snapshot!!.documentChanges) {
+                processChange(documentChange)
+            }
+        }
+    }
+    fun processChange(change: DocumentChange){
+        var item = change.document.toObject(Item::class.java)
+        if (item.ownerName!=name)
+            return
+        item.id = change.document.id
+        if (change.type == DocumentChange.Type.ADDED){
+            items.add(item)
+                notifyAdded()
+        }
+        if (change.type == DocumentChange.Type.MODIFIED){
+            for ((n,it) in items.withIndex()){
+                if (it.id==item.id){
+                    items[n]=item
+                        itemChanged(n)
+                    break
+                }
+            }
+        }
+        if (change.type == DocumentChange.Type.REMOVED){
+            for ((n,it) in items.withIndex()){
+                if (it.id == item.id){
+                    items.removeAt(n)
+                        itemRemoved(n)
+                    break
+                }
+            }
+        }
     }
 }
     interface ItemAdapter{

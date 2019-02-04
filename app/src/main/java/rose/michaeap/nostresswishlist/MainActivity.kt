@@ -2,40 +2,48 @@ package rose.michaeap.nostresswishlist
 
 
 import android.os.Bundle
+import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import com.firebase.ui.auth.AuthUI
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.firestore.DocumentChange
 
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.QuerySnapshot
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.add_user_name.view.*
 
 class MainActivity : AppCompatActivity(),ItemSource {
 
     val RC_SIGN_IN = 1
     var items = ArrayList<Item>()
     val itemsRef = FirebaseFirestore.getInstance().collection("items")
+    val personRef = FirebaseFirestore.getInstance().collection("people")
     var itemDep : ItemAdapter?=null
     lateinit var authListener : FirebaseAuth.AuthStateListener
     var auth = FirebaseAuth.getInstance()
+    var userID:String=""
+    var userName:String=""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
-        addListener()
-        showItemList()
+        //addListener()
+        //showItemList()
         addAuthListener()
     }
 
     fun showItemList(){
+        toolbar.menu.setGroupVisible(R.id.login_dependent,true)
+        //toolbar.title = "$userName's Wish List"
         var ft = supportFragmentManager.beginTransaction()
-        ft.replace(R.id.fragment_container,YourItemFragment())
+        ft.replace(R.id.fragment_container,YourItemFragment.newInstance(userName))
         ft.commit()
     }
 
@@ -51,10 +59,20 @@ class MainActivity : AppCompatActivity(),ItemSource {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
-            R.id.action_settings -> true
+            R.id.action_logout ->{logout();true}
+            R.id.action_yourList->{showItemList();true}
+            R.id.action_groups->{openGroupFragment();true}
             else -> super.onOptionsItemSelected(item)
         }
     }
+    fun logout(){
+        auth.signOut()
+        userName=""
+        userID=""
+        items = ArrayList<Item>()
+        switchToLoginScreen()
+    }
+
     fun inputItem(){
         itemDep = null
         var ft = supportFragmentManager.beginTransaction()
@@ -71,12 +89,8 @@ class MainActivity : AppCompatActivity(),ItemSource {
     override fun closeInspect(item:Item?,ogi:Item?){
         if (item!=null){
             if (ogi==null) {
-                item.userID = auth.uid?:""
+                item.ownerName = auth.currentUser!!.displayName?:""
                 itemsRef.add(item)
-//                items.add(item)
-//                itemsRef.whereEqualTo("name",item.name).get().addOnSuccessListener {snapshot: QuerySnapshot? ->
-//                    item.id = snapshot!!.documents[0].id
-//                }
             }
             else{
                 itemsRef.document(ogi.id).set(item)
@@ -107,66 +121,69 @@ class MainActivity : AppCompatActivity(),ItemSource {
         return n
     }
 
-    fun addListener(){
-        itemsRef.addSnapshotListener { snapshot, firebaseFirestoreException ->
-            if (firebaseFirestoreException != null) {
-                Log.e("MyTag", firebaseFirestoreException.message)
-                return@addSnapshotListener
-            }
-            for (documentChange in snapshot!!.documentChanges) {
-                processChange(documentChange)
-            }
-        }
-    }
-    fun processChange(change: DocumentChange){
-        var item = change.document.toObject(Item::class.java)
-        item.id = change.document.id
-        if (change.type == DocumentChange.Type.ADDED){
-            items.add(item)
-            Log.i("MyTag","*"+(itemDep!=null))
-            if (itemDep!=null)
-                (itemDep as ItemAdapter).notifyAdded()
-        }
-        if (change.type == DocumentChange.Type.MODIFIED){
-            for ((n,it) in items.withIndex()){
-                if (it.id==item.id){
-                    items[n]=item
-                    if (itemDep!=null)
-                        (itemDep as ItemAdapter).itemChanged(n)
-                    break
-                }
-            }
-        }
-        if (change.type == DocumentChange.Type.REMOVED){
-            for ((n,it) in items.withIndex()){
-                if (it.id == item.id){
-                    items.removeAt(n)
-                    if (itemDep!=null)
-                        (itemDep as ItemAdapter).itemRemoved(n)
-                    break
-                }
-            }
-        }
-    }
-
     override fun registerItemAdapter(adp: ItemAdapter) {
         itemDep = adp
     }
-    fun addAuthListener(){
+    fun addAuthListener() {
         authListener = FirebaseAuth.AuthStateListener {}
         var user = auth.currentUser
-        if (user==null){
-            startLogin()
+        if (user == null) {
+            //startLogin()
+            switchToLoginScreen()
         }
-
-
+        else{
+            checkName()
+        }
     }
-    fun startLogin(){
-        val providers = arrayListOf(AuthUI.IdpConfig.GoogleBuilder().build())
-        val loginIntent = AuthUI.getInstance().createSignInIntentBuilder().setAvailableProviders(providers).build()
-        startActivityForResult(
-            loginIntent,
-            RC_SIGN_IN)
+
+    fun switchToLoginScreen(){
+        toolbar.title = "No Stress Wish List"
+        toolbar.menu.setGroupVisible(R.id.login_dependent,false)
+        var fr = supportFragmentManager.beginTransaction()
+        fr.replace(R.id.fragment_container,LoginHandler())
+        fr.commit()
+    }
+    fun onLogin(){
+        addAuthListener()
+    }
+    fun checkName(){
+        userName = auth.currentUser?.displayName?:""
+        userID = auth.currentUser?.uid?:""
+        if (userName==null || userName=="") {
+            var builder = AlertDialog.Builder(this)
+            var view = LayoutInflater.from(this).inflate(R.layout.add_user_name, null, false)
+            builder.setView(view)
+            builder.setTitle("Set name")
+            builder.setPositiveButton(android.R.string.ok) { _, _ ->
+                var name = view.name_to_add.text.toString()
+                var change = UserProfileChangeRequest.Builder().setDisplayName(name).build()
+                auth.currentUser!!.updateProfile(change)
+                //checkName()
+                showItemList()
+                return@setPositiveButton
+            }
+            builder.create().show()
+        }
+        else {
+            showItemList()
+        }
+    }
+    fun openGroupFragment(){
+        var fr = supportFragmentManager.beginTransaction()
+        fr.replace(R.id.fragment_container,GroupPageHandler.newInstance(userName),"group")
+        fr.commit()
+    }
+    fun showFriendList(friendName:String){
+        var fr = supportFragmentManager.beginTransaction()
+        fr.addToBackStack("group")
+        fr.replace(R.id.fragment_container,FriendListHandler.newInstance(userName,friendName),"friend")
+        fr.commit()
+    }
+    fun inspectFriendItem(item:Item,userName:String,friendName:String){
+        var fr = supportFragmentManager.beginTransaction()
+        fr.addToBackStack("friend")
+        fr.replace(R.id.fragment_container,FriendItemFragment.newInstance(item,userName,friendName))
+        fr.commit()
     }
 
 }

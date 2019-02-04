@@ -4,7 +4,6 @@
                                     android:padding = "8dp"
                                     android:layout_margin="8dp"
                                     android:layout_height="wrap_content">
-
     <TextView
             android:text="I want this item"
             android:textSize="40dp"

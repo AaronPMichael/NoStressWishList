@@ -2,10 +2,9 @@ package rose.michaeap.nostresswishlist
 
 import android.os.Parcel
 import android.os.Parcelable
-import com.google.firebase.firestore.Exclude
 import java.io.Serializable
 
-data class Item(var name:String="",var price:Double=0.0,var priority:Boolean=false,var mult:Boolean=false,var online:Boolean=false,var comments:String="",var id:String="",var userID:String=""):Parcelable,Serializable {
+data class Item(var name:String="",var price:Double=0.0,var priority:Boolean=false,var mult:Boolean=false,var online:Boolean=false,var comments:String="",var id:String="",var ownerName:String=""):Parcelable,Serializable {
 
     constructor(parcel: Parcel) : this(
         parcel.readString(),
@@ -25,7 +24,7 @@ data class Item(var name:String="",var price:Double=0.0,var priority:Boolean=fal
         parcel.writeByte(if (online) 1 else 0)
         parcel.writeString(comments)
         parcel.writeString(id)
-        parcel.writeString(userID)
+        parcel.writeString(ownerName)
     }
 
     override fun describeContents(): Int {
