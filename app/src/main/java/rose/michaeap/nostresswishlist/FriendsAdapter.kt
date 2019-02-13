@@ -2,12 +2,12 @@ package rose.michaeap.nostresswishlist
 
 import android.content.Context
 import android.support.v7.widget.RecyclerView
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import com.google.firebase.firestore.FirebaseFirestore
 
 class FriendsAdapter(var context: Context?,var userName:String):RecyclerView.Adapter<FriendHolder>() {
-    var groupRef = FirebaseFirestore.getInstance().collection("groups")
     var ingroupRef = FirebaseFirestore.getInstance().collection("groupRefs")
     lateinit var friendListener:FriendListener
 
@@ -31,6 +31,7 @@ class FriendsAdapter(var context: Context?,var userName:String):RecyclerView.Ada
         ingroupRef.get().addOnSuccessListener {
             var groups = ArrayList<GroupRelation>()
             var groupNames = ArrayList<String>()
+            var seen = HashSet<String>()
             for (doc in it.documents){
                 var rel = doc.toObject(GroupRelation::class.java)
                 if (rel?.userName == userName && !groupNames.contains(rel.group)){
@@ -41,8 +42,9 @@ class FriendsAdapter(var context: Context?,var userName:String):RecyclerView.Ada
                 }
             }
             for (rel in groups){
-                if (groupNames.contains(rel.group) && rel.userName!=userName){
+                if (groupNames.contains(rel.group) && rel.userName!=userName && !seen.contains(rel.userName)){
                     people.add(Person(rel.userName))
+                    seen.add(rel.userName)
                     notifyItemInserted(people.size-1)
                 }
             }

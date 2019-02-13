@@ -19,7 +19,7 @@ import kotlinx.android.synthetic.main.fragment_item__add_.view.*
  *
  */
 class Item_Add_Fragment : Fragment() {
-    lateinit var itemSource:ItemSource
+    lateinit var itemSource : MainActivity
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,6 +32,7 @@ class Item_Add_Fragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        itemSource = context as MainActivity
         // Inflate the layout for this fragment
         var ogi = arguments?.getParcelable<Item>(ARG_ITEM)?:null
         var view = inflater.inflate(R.layout.fragment_item__add_, container, false)
@@ -56,15 +57,6 @@ class Item_Add_Fragment : Fragment() {
         return view
     }
 
-
-    override fun onAttach(context: Context) {
-        if (context is ItemSource) {
-            itemSource = context as ItemSource
-        }
-        super.onAttach(context)
-
-    }
-
     fun createItem(view:View):Item{
         val name = view.editName.text.toString()
         var price = view.editPrice.text.toString().toDoubleOrNull()
@@ -82,7 +74,7 @@ class Item_Add_Fragment : Fragment() {
         val ARG_ITEM = "item"
 
         @JvmStatic
-        fun newInstance(item:Item) =
+        fun newInstance(item:Item?) =
             Item_Add_Fragment().apply {
                 arguments = Bundle().apply {
                     if (item!=null)

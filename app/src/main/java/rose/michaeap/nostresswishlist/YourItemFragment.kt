@@ -35,10 +35,11 @@ class YourItemFragment: Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        (context as MainActivity).toolbar.title = "$name's Wish List"
+        var source = context as MainActivity
+        source.toolbar.title = "$name's Wish List"
         var frgmt = inflater.inflate(R.layout.fragment_your_items, container, false)
         var rclvw = frgmt.yi_recycler_view as RecyclerView
-        frgmt.new_item_button.setOnClickListener {(activity as MainActivity).inputItem() }
+        frgmt.new_item_button.setOnClickListener {source.inputItem() }
         adapter = YourItemAdapter(activity,name)
         adapter.addListener()
         rclvw.layoutManager = LinearLayoutManager(context)

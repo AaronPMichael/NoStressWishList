@@ -6,15 +6,19 @@ import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.widget.Toast
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentChange
 import com.google.firebase.firestore.FirebaseFirestore
 
 class YourItemAdapter(var context: Context?,var name:String):RecyclerView.Adapter<ItemHolder>(),ItemAdapter {
 
     var items = ArrayList<Item>()
-    lateinit var source: ItemSource
     val itemsRef = FirebaseFirestore.getInstance().collection("items")
-
+    val commitRef = FirebaseFirestore.getInstance().collection("commitment")
+    val compRef = FirebaseFirestore.getInstance().collection("commitDeletionNotices")
+    val userRef = FirebaseFirestore.getInstance().collection("users")
+    val source = context as MainActivity
     override fun onCreateViewHolder(parent: ViewGroup, p1: Int): ItemHolder {
         val view = LayoutInflater.from(context).inflate(R.layout.item_card_view, parent, false)
         return ItemHolder(view, this)
@@ -28,13 +32,6 @@ class YourItemAdapter(var context: Context?,var name:String):RecyclerView.Adapte
         p0.bind(items[p1])
     }
 
-    fun loadItems() {
-        source = context as ItemSource
-        source.registerItemAdapter(this)
-        items = source.getItemList()
-        notifyItemRangeInserted(0, items.size)
-    }
-
     fun selectItem(item: Item) {
         source.selectItem(item)
     }
@@ -43,10 +40,17 @@ class YourItemAdapter(var context: Context?,var name:String):RecyclerView.Adapte
         var builder = AlertDialog.Builder(context!!)
         builder.setView(R.layout.remove_item)
         builder.setTitle(item.name)
+        var n = -1
+        for ((pos,it) in items.withIndex())
+            if (it.id==item.id)
+                n = pos
         builder.setPositiveButton(android.R.string.yes, { _, _ ->
-            val n = source.removeItem(item)
-            if (n != -1)
-                notifyItemRemoved(n)
+            if (n != -1) {
+                checkItemDeletion(n)
+//                items.removeAt(n)
+//                notifyItemRemoved(n)
+//                itemsRef.document(item.id).delete()
+            }
         })
         builder.setNegativeButton(android.R.string.no, { _, _ -> })
         builder.create().show()
@@ -103,6 +107,49 @@ class YourItemAdapter(var context: Context?,var name:String):RecyclerView.Adapte
                     items.removeAt(n)
                         itemRemoved(n)
                     break
+                }
+            }
+        }
+    }
+    fun checkItemDeletion(n:Int){
+        var item=items[n]
+        commitRef.whereEqualTo("itemID",item.id).get().addOnSuccessListener {
+            if (it.documents.isEmpty()) {
+                items.removeAt(n)
+                notifyItemRemoved(n)
+                itemsRef.document(item.id).delete()
+                return@addOnSuccessListener
+            }
+            var builder = AlertDialog.Builder(context!!)
+            var view = LayoutInflater.from(context).inflate(R.layout.commit_fallback, null, false)
+            builder.setView(view)
+            builder.setTitle("Remove item: ${item.name}")
+            builder.setNegativeButton(android.R.string.no, null)
+            builder.setPositiveButton(android.R.string.yes, { _, _ ->
+                Toast.makeText(context,"Notifying involved users",Toast.LENGTH_SHORT)
+                removeCommittedItem(item)
+            })
+            builder.create().show()
+        }
+    }
+    fun removeCommittedItem(item:Item){
+        var userNames = HashSet<String>()
+        commitRef.whereEqualTo("itemID",item.id).get().addOnSuccessListener {
+            for (doc in it.documents){
+                var commit = doc.toObject(Commitment::class.java)
+                userNames.add(commit!!.user)
+                commitRef.document(doc.id).delete()
+            }
+            notifyRemoval(item,userNames)
+            itemsRef.document(item.id).delete()
+        }
+    }
+    fun notifyRemoval(item:Item,userNames:HashSet<String>){
+        for (user in userNames){
+            userRef.whereEqualTo("name",user).get().addOnSuccessListener {
+                for (doc in it.documents) {
+                    var user = doc.toObject(User::class.java)
+                    compRef.add(DeletionNotice(user!!.email,item.name,item.ownerName))
                 }
             }
         }

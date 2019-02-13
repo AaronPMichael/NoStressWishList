@@ -15,5 +15,14 @@
           android:title="Logout"
           android:orderInCategory="300"
           app:showAsAction="never"/>
+        <item android:id="@+id/action_commitments"
+              android:title="Commitments"
+              android:orderInCategory="103"
+              app:showAsAction="never"/>
+        <item android:id="@+id/action_reset"
+              android:title="Reset List"
+              android:orderInCategory="301"
+              app:showAsAction="never"/>
+        >
     </group>
 </menu>

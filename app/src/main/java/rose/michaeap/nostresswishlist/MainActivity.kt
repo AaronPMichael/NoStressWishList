@@ -9,19 +9,17 @@ import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import com.firebase.ui.auth.AuthUI
+import android.widget.Toast
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.UserProfileChangeRequest
-import com.google.firebase.firestore.DocumentChange
 
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.add_user_name.view.*
 
-class MainActivity : AppCompatActivity(),ItemSource {
+class MainActivity : AppCompatActivity() {
 
     val RC_SIGN_IN = 1
-    var items = ArrayList<Item>()
     val itemsRef = FirebaseFirestore.getInstance().collection("items")
     val personRef = FirebaseFirestore.getInstance().collection("people")
     var itemDep : ItemAdapter?=null
@@ -29,6 +27,8 @@ class MainActivity : AppCompatActivity(),ItemSource {
     var auth = FirebaseAuth.getInstance()
     var userID:String=""
     var userName:String=""
+    var commitRef = FirebaseFirestore.getInstance().collection("commitment")
+    val userRef = FirebaseFirestore.getInstance().collection("users")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,7 +43,7 @@ class MainActivity : AppCompatActivity(),ItemSource {
         toolbar.menu.setGroupVisible(R.id.login_dependent,true)
         //toolbar.title = "$userName's Wish List"
         var ft = supportFragmentManager.beginTransaction()
-        ft.replace(R.id.fragment_container,YourItemFragment.newInstance(userName))
+        ft.replace(R.id.fragment_container,YourItemFragment.newInstance(userName),"list")
         ft.commit()
     }
 
@@ -58,10 +58,14 @@ class MainActivity : AppCompatActivity(),ItemSource {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
+        //while (supportFragmentManager.backStackEntryCount>0)
+        //    supportFragmentManager.popBackStack()
         return when (item.itemId) {
             R.id.action_logout ->{logout();true}
             R.id.action_yourList->{showItemList();true}
             R.id.action_groups->{openGroupFragment();true}
+            R.id.action_commitments->{openCommitmentFragment(userName);true}
+            R.id.action_reset->{holidayResetMessage();true}
             else -> super.onOptionsItemSelected(item)
         }
     }
@@ -69,27 +73,20 @@ class MainActivity : AppCompatActivity(),ItemSource {
         auth.signOut()
         userName=""
         userID=""
-        items = ArrayList<Item>()
         switchToLoginScreen()
     }
 
     fun inputItem(){
-        itemDep = null
         var ft = supportFragmentManager.beginTransaction()
-        ft.replace(R.id.fragment_container,Item_Add_Fragment(),"add item")
+        ft.addToBackStack("list")
+        ft.replace(R.id.fragment_container,Item_Add_Fragment.newInstance(null),"add item")
         ft.commit()
     }
-    override fun getItemList():ArrayList<Item>{
-        return items
-    }
 
-    override fun getItemListener(): View.OnClickListener {
-        return View.OnClickListener {  }
-    }
-    override fun closeInspect(item:Item?,ogi:Item?){
+    fun closeInspect(item:Item?,ogi:Item?){
         if (item!=null){
+            item.ownerName = auth.currentUser!!.displayName?:""
             if (ogi==null) {
-                item.ownerName = auth.currentUser!!.displayName?:""
                 itemsRef.add(item)
             }
             else{
@@ -99,29 +96,13 @@ class MainActivity : AppCompatActivity(),ItemSource {
         showItemList()
     }
 
-    override fun selectItem(item:Item){
-        var c = getIndex(item)
+    fun selectItem(item:Item){
         var ft = supportFragmentManager.beginTransaction()
         ft.replace(R.id.fragment_container,Item_Add_Fragment.newInstance(item),"add item")
         ft.commit()
     }
-    fun getIndex(item:Item):Int{
-        for ((p,i) in items.withIndex())
-            if (i==item)
-                return p
-        return -1
-    }
 
-    override fun removeItem(item: Item):Int {
-        val n = getIndex(item)
-        if (n<0)
-            return -1
-        items.removeAt(n)
-        itemsRef.document(item.id).delete()
-        return n
-    }
-
-    override fun registerItemAdapter(adp: ItemAdapter) {
+    fun registerItemAdapter(adp: ItemAdapter) {
         itemDep = adp
     }
     fun addAuthListener() {
@@ -149,56 +130,120 @@ class MainActivity : AppCompatActivity(),ItemSource {
     fun checkName(){
         userName = auth.currentUser?.displayName?:""
         userID = auth.currentUser?.uid?:""
+        var email = auth.currentUser?.email?:""
         if (userName==null || userName=="") {
             var builder = AlertDialog.Builder(this)
             var view = LayoutInflater.from(this).inflate(R.layout.add_user_name, null, false)
             builder.setView(view)
             builder.setTitle("Set name")
+            if (email!="")
+                view.email_to_add.visibility = View.GONE
             builder.setPositiveButton(android.R.string.ok) { _, _ ->
                 var name = view.name_to_add.text.toString()
-                var change = UserProfileChangeRequest.Builder().setDisplayName(name).build()
-                auth.currentUser!!.updateProfile(change)
+                var change = UserProfileChangeRequest.Builder().setDisplayName(name)
+                auth.currentUser!!.updateProfile(change.build())
                 //checkName()
+                if (email==null || email=="")
+                    email = view.email_to_add.text.toString()
+                checkUser(name,email)
+                userName = name
                 showItemList()
                 return@setPositiveButton
             }
             builder.create().show()
         }
         else {
+            checkUser(userName,email)
             showItemList()
         }
     }
+    fun checkUser(name:String,email:String){
+        userRef.whereEqualTo("name",name).get().addOnSuccessListener{
+            if (it.isEmpty)
+                userRef.add(User(name,email))
+        }
+    }
     fun openGroupFragment(){
+        toolbar.title = "Your groups"
         var fr = supportFragmentManager.beginTransaction()
         fr.replace(R.id.fragment_container,GroupPageHandler.newInstance(userName),"group")
         fr.commit()
     }
     fun showFriendList(friendName:String){
+        toolbar.title = "$friendName's Wish List"
         var fr = supportFragmentManager.beginTransaction()
         fr.addToBackStack("group")
         fr.replace(R.id.fragment_container,FriendListHandler.newInstance(userName,friendName),"friend")
         fr.commit()
     }
     fun inspectFriendItem(item:Item,userName:String,friendName:String){
+        toolbar.title = "No Stress Wish List"
         var fr = supportFragmentManager.beginTransaction()
         fr.addToBackStack("friend")
-        fr.replace(R.id.fragment_container,FriendItemFragment.newInstance(item,userName,friendName))
+        fr.replace(R.id.fragment_container,FriendItemFragment.newInstance(item,userName,friendName,false))
         fr.commit()
     }
-
-}
-
-
-
-
-    interface ItemSource{
-        fun getItemList():ArrayList<Item>
-        fun getItemListener():View.OnClickListener
-        fun closeInspect(item:Item?,ogi:Item?)
-        fun selectItem(item:Item)
-        fun removeItem(item:Item):Int
-        fun registerItemAdapter(adp:ItemAdapter)
+    fun commitToGift(name:String,id:String){
+        val commitment = Commitment(name,id)
+        commitRef.add(commitment)
+        Toast.makeText(this,"You have committed to a gift",Toast.LENGTH_SHORT).show()
+        openGroupFragment()
     }
+    fun openCommitmentFragment(name:String){
+        toolbar.title = "Your commits"
+        var fr = supportFragmentManager.beginTransaction()
+        fr.replace(R.id.fragment_container,CommitmentViewer.newInstance(name),"commits")
+        fr.commit()
+    }
+    fun inspectCommitment(item:Item){
+        toolbar.title = "No Stress Wish List"
+        var fr = supportFragmentManager.beginTransaction()
+        fr.addToBackStack("commits")
+        fr.replace(R.id.fragment_container,FriendItemFragment.newInstance(item,userName,item.ownerName,true))
+        fr.commit()
+    }
+    fun uncommitToGift(userName:String,itemID:String){
+        Log.d("MyTag","$userName,$itemID")
+        commitRef.whereEqualTo("user",userName).whereEqualTo("itemID",itemID).get().addOnSuccessListener {
+            if (it.isEmpty){
+                Toast.makeText(this,"No commitment found",Toast.LENGTH_SHORT).show()
+                return@addOnSuccessListener
+            }
+            for (doc in it.documents)
+                commitRef.document(doc.id).delete()
+            Toast.makeText(this,"Commitment deleted",Toast.LENGTH_SHORT)
+        }
+        supportFragmentManager.popBackStack()
+        openCommitmentFragment(userName)
+    }
+    fun holidayResetMessage(){
+        var builder = AlertDialog.Builder(this)
+        var view = LayoutInflater.from(this).inflate(R.layout.holiday_reset,null,false)
+        builder.setTitle("Clear list?")
+        builder.setView(view)
+        builder.setNegativeButton(android.R.string.no,null)
+        builder.setPositiveButton(android.R.string.ok,{_,_->
+            holidayReset()
+        })
+    }
+    fun holidayReset(){
+        var ids = HashSet<String>()
+        itemsRef.whereEqualTo("ownerName",userName).get().addOnSuccessListener {
+            for (doc in it.documents){
+                ids.add(doc.toObject(Item::class.java)!!.id)
+            }
+            commitRef.get().addOnSuccessListener {
+                for (doc in it.documents){
+                    var commit = doc.toObject(Commitment::class.java)
+                    if (ids.contains(commit!!.itemID))
+                        commitRef.document(doc.id).delete()
+                }
+            }
+            for (id in ids)
+                itemsRef.document(id).delete()
+        }
+    }
+}
 
 
 

@@ -11,11 +11,12 @@
                       android:gravity="center_horizontal" android:orientation="vertical">
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
                       android:text="Your groups" android:layout_marginTop="28dp"
+                      android:background="@color/colorLightRed"
                       android:textSize="24dp" android:textStyle="bold"/>
             <android.support.v7.widget.RecyclerView android:layout_width="match_parent"
                                                     android:layout_height="wrap_content"
                                                     android:id="@+id/groups_recview"
-                                                    android:layout_marginVertical="20dp"/>
+                                                    android:layout_marginVertical="10dp"/>
             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
                           android:gravity="center_horizontal">
                 <Button android:layout_width="wrap_content" android:layout_height="wrap_content"
@@ -25,11 +26,12 @@
             </LinearLayout>
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
                       android:text="Your friends" android:layout_marginTop="28dp"
+                      android:background="@color/colorLightRed"
                       android:textSize="24dp" android:textStyle="bold"/>
             <android.support.v7.widget.RecyclerView android:layout_width="match_parent"
                                                     android:layout_height="wrap_content"
                                                     android:id="@+id/people_recview"
-                                                    android:layout_marginVertical="20dp"/>
+                                                    android:layout_marginVertical="10dp"/>
         </LinearLayout>
     </ScrollView>
 </android.support.constraint.ConstraintLayout>
