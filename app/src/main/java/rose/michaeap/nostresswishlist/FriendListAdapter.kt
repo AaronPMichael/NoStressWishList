@@ -52,8 +52,8 @@ class FriendListAdapter(var context: Context?, var username:String,var friendnam
             }
         }
         if (change.type==DocumentChange.Type.REMOVED){
-            for ((pos,it) in items.withIndex()){
-                if (it.id == item.id){
+            for (pos in 0 until items.size){
+                if (pos<items.size && items[pos].id == item.id){
                     items.removeAt(pos)
                     notifyItemRemoved(pos)
                 }
@@ -63,6 +63,7 @@ class FriendListAdapter(var context: Context?, var username:String,var friendnam
     fun inspectItem(item:Item){
         (context as MainActivity).inspectFriendItem(item,username,friendname)
     }
+
     fun checkItem(item:Item){
         commitRef.whereEqualTo("itemID",item.id).get().addOnSuccessListener {
             if (it.isEmpty){
@@ -71,8 +72,8 @@ class FriendListAdapter(var context: Context?, var username:String,var friendnam
                 return@addOnSuccessListener
             }
             for (doc in it){
-                var item2 = doc.toObject(Item::class.java)
-                if (item2.ownerName == username){
+                var item2 = doc.toObject(Commitment::class.java)
+                if (item2.user == username){
                     items.add(item)
                     yourCommits.add(item.id)
                     notifyItemInserted(items.size-1)
